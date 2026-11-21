@@ -103,3 +103,28 @@ Bu dosya proje süresince alınan teknik kararları, yapılan işlemleri, test s
 - **Manuel Web Arayüzü Ayarları:** GitHub üzerinde test PR'ı açıldı, CI başarısızlığı doğrulandı ve PR merge edilmeden kapatılıp uzak test dalı silindi.
 - **Güvenlik Kararları ve Gerekçeleri:** Test verilerinin ana dal geçmişinde kalmaması için izole dal + PR stratejisi uygulandı; gerçek API anahtarı yerine sahte test verisi kullanıldı.
 - **Açık Kalan İşler ve Sonraki Faz:** Faz 4 kapsamında SonarQube Cloud statik kod analizi (SAST) ve Quality Gate entegrasyonunun yapılması.
+
+
+---
+
+## Kayıt 5 — Faz 4: SonarQube Cloud SAST Entegrasyonu, Quality Gate ve Tedarik Zinciri Güvenliği İyileştirmeleri
+- **Tarih:** 21.11.2026
+- **Faz ve Amaç:** Faz 4 — CI/CD boru hattına SonarQube Cloud statik kod analizi (SAST) entegrasyonu, `sonar.qualitygate.wait=true` ile kalite kapısı zorunluluğu ve SAST bulgularının giderilmesi.
+- **Yapılan İşlemler:**
+  - SonarQube Cloud üzerinde `muhammedfatihsaltan-1` organizasyonu ve `MuhammedFatihSaltan_secureflow-devsecops2` projesi oluşturuldu; Automatic Analysis kapatılarak GitHub Actions entegrasyonu seçildi ve `SONAR_TOKEN` GitHub Repository Secrets içerisine eklendi.
+  - Proje kök dizininde `sonar-project.properties` dosyası oluşturuldu; `pytest-cov` eklenerek test kapsama raporu (`coverage.xml`) artifact olarak SonarQube adımına aktarıldı.
+  - İlk analizde tespit edilen tedarik zinciri güvenliği bulguları doğrultusunda üçüncü taraf action'lar tam commit SHA hash'leriyle sabitlendi ve Python bağımlılıkları SHA-256 hash kilidi (`--require-hashes`) ile `requirements.txt` dosyasına işlendi.
+- **Kurulan Paketler ve Araç Sürümleri:** `pytest-cov==5.0.0`, `SonarSource/sonarqube-scan-action` (`2f77a1ec69fb1d595b06f35ab27e97605bdef703`).
+- **Çalıştırılan Komutlar:**
+  - `curl -s https://api.github.com/repos/SonarSource/sonarqube-scan-action/git/ref/tags/v5 | findstr "sha"`
+  - `pip download --only-binary=:all: --platform manylinux2014_x86_64 --python-version 3.11 --implementation cp --abi cp311 -d temp_wheels -r requirements.txt`
+  - `git add -A && git commit -m "fix(ci): hash kilitli bağımlılıklar standart requirements.txt dosyasına taşındı" && git push`
+- **Testler ve Gerçek Sonuçlar:**
+  - **İlk Entegrasyon (`#7`):** SonarQube Cloud 6 tedarik zinciri uyarısı tespit ederek `Quality Gate: Failed` döndürdü ve `exit code 3` ile CI boru hattını durdurdu.
+  - **Son Doğrulama (`#11`):** Commit SHA sabitlemesi ve SHA-256 bağımlılık kilitlemesi sonrasında `New Issues: 0`, `Quality Gate: Passed` ve CI tüm adımlarda `PASS` (58s) elde edildi.
+- **Karşılaşılan Hatalar ve Çözümleri:**
+  - YAML ayrıştırıcısının `--only-binary=:all:` ifadesindeki `: ` dizilimini mapping sanması komutu çift tırnak içine alarak çözüldü.
+  - `pip-tools==7.4.1` ile `pip 26.3` arasındaki `AttributeError` uyumsuzluğu yerine `pip download` ve Python `hashlib` ile doğrudan SHA-256 hash üretimi yapıldı.
+- **Manuel Web Arayüzü Ayarları:** SonarQube Cloud projesinde Automatic Analysis kapatıldı ve GitHub Secrets altında `SONAR_TOKEN` tanımlandı.
+- **Güvenlik Kararları ve Gerekçeleri:** Etiket ele geçirme (tag hijacking) ve zararlı paket enjeksiyonuna karşı tüm dış CI eklentileri commit SHA ile, Python bağımlılıkları ise SHA-256 hash doğrulaması ile kilitlendi.
+- **Açık Kalan İşler ve Sonraki Faz:** Faz 5 kapsamında uygulamanın konteynerleştirilmesi (`Dockerfile`) ve Trivy ile konteyner/dosya sistemi zafiyet taraması entegrasyonu.
