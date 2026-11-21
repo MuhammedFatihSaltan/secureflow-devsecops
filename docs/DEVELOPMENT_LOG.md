@@ -152,3 +152,19 @@ Bu dosya proje süresince alınan teknik kararları, yapılan işlemleri, test s
   - `#14–#16`: Taban imajdaki `setuptools/_vendor` içinde gömülü eski `jaraco.context 5.3.0` (`CVE-2026-23949`) ve `wheel 0.45.1` (`CVE-2026-24049`) paketleri, çalışma zamanında gerekmeyen bu araçların `pip uninstall -y setuptools wheel` ile imajdan kaldırılmasıyla çözüldü ve SonarQube `pip install` hash kuralı korundu.
 - **Güvenlik Kararları ve Gerekçeleri:** Konteyner kaçışı riskine karşı non-root (`appuser`) kullanıcısı zorunlu kılındı; saldırı yüzeyini küçültmek için çalışma zamanında gerekmeyen derleme/paketleme araçları imajdan temizlendi.
 - **Açık Kalan İşler ve Sonraki Faz:** Faz 6 kapsamında tüm güvenlik araçlarının çıktılarını (Gitleaks, SonarQube, Trivy SARIF/JSON raporları) GitHub Security sekmesine/artifact'larına merkezi olarak aktarma, mimari dokümantasyon ve bitirme sunumu hazırlığı.
+
+
+---
+
+## Kayıt 7 — Faz 6 (Final): Merkezi SARIF Güvenlik Raporlama ve Mimari Dokümantasyon
+- **Tarih:** 21.11.2026
+- **Faz ve Amaç:** Faz 6 — Gitleaks ve Trivy güvenlik tarama sonuçlarının standart SARIF formatında üretilerek GitHub Actions Artifacts altında arşivlenmesi ve proje mimari dokümantasyonunun (`README.md`) tamamlanması.
+- **Yapılan İşlemler:**
+  - `.github/workflows/ci.yml` içerisine Gitleaks (`results.sarif`) ve Trivy (`trivy-fs-report.sarif`, `trivy-image-report.sarif`) raporlarını `if: always()` koşuluyla arşivleyen artifact adımları eklendi.
+  - Jüri ve teknik değerlendirme için mimari akış diyagramını, tedarik zinciri ve konteyner sertleştirme kararlarını, dizin yapısını ve yerel doğrulama komutlarını içeren `README.md` dosyası oluşturuldu.
+- **Çalıştırılan Komutlar:**
+  - `git add .github/workflows/ci.yml README.md && git commit -m "feat(docs): sarif guvenlik raporlama artifactlari ve proje mimari dokumantasyonu eklendi" && git push`
+- **Testler ve Gerçek Sonuçlar:**
+  - CI boru hattı (`#19`) 2 dakika 17 saniyede tüm aşamalardan yeşil tik (`PASS`) alarak tamamlandı ve 4 denetim artifact'ı üretildi.
+- **Güvenlik Kararları ve Gerekçeleri:** Olası bir güvenlik kapısı ihlalinde dahi bulguların denetlenebilmesi için SARIF rapor arşivleme adımları `if: always()` ile güvence altına alındı.
+- **Proje Durumu:** Tüm fazlar (Faz 1–6) başarıyla tamamlandı; sistem üretime ve bitirme sunumuna hazır.
