@@ -128,3 +128,27 @@ Bu dosya proje süresince alınan teknik kararları, yapılan işlemleri, test s
 - **Manuel Web Arayüzü Ayarları:** SonarQube Cloud projesinde Automatic Analysis kapatıldı ve GitHub Secrets altında `SONAR_TOKEN` tanımlandı.
 - **Güvenlik Kararları ve Gerekçeleri:** Etiket ele geçirme (tag hijacking) ve zararlı paket enjeksiyonuna karşı tüm dış CI eklentileri commit SHA ile, Python bağımlılıkları ise SHA-256 hash doğrulaması ile kilitlendi.
 - **Açık Kalan İşler ve Sonraki Faz:** Faz 5 kapsamında uygulamanın konteynerleştirilmesi (`Dockerfile`) ve Trivy ile konteyner/dosya sistemi zafiyet taraması entegrasyonu.
+
+
+---
+
+## Kayıt 6 — Faz 5: Docker Konteynerleştirme, Saldırı Yüzeyi Küçültme ve Trivy Zafiyet Taraması
+- **Tarih:** 21.11.2026
+- **Faz ve Amaç:** Faz 5 — Güvenli `Dockerfile` yapılandırması (non-root user, slim taban imaj) ve CI boru hattına Trivy dosya sistemi/yapılandırma/konteyner imajı güvenlik taraması entegrasyonu.
+- **Yapılan İşlemler:**
+  - `.dockerignore` ve güvenlik sertleştirmesi uygulanmış `Dockerfile` (`python:3.11-slim`, yetkisiz `appuser` kullanıcısı, `--require-hashes` ile bağımlılık kurulumu) oluşturuldu ve yerel Docker ortamında doğrulandı.
+  - `aquasecurity/trivy-action` (`v0.36.0` — `ed142fd0673e97e23eac54620cfb913e5ce36c25`) resmi commit SHA hash'i ile `.github/workflows/ci.yml` içerisine hem dosya sistemi (`fs`) hem de Docker imaj (`image`) taraması olarak eklendi.
+  - Trivy taramasında tespit edilen Debian OS katmanı ve Python `setuptools`/`wheel` gömülü kütüphane CVE'leri (`CVE-2026-23949`, `CVE-2026-24049`) giderildi.
+- **Kurulan Paketler ve Araç Sürümleri:** `aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25` (`v0.36.0`), Docker (`python:3.11-slim`).
+- **Çalıştırılan Komutlar:**
+  - `docker build -t secureflow:local .`
+  - `docker run --rm secureflow:local && docker run --rm secureflow:local whoami`
+  - `git add Dockerfile && git commit -m "fix(docker): calisma zamaninda gerekmeyen setuptools ve wheel imajdan kaldirildi" && git push`
+- **Testler ve Gerçek Sonuçlar:**
+  - Yerel konteyner doğrulamasında `SecureFlow container calisiyor!` ve yetkisiz kullanıcı olarak `appuser` çıktısı alındı.
+  - CI boru hattında (`#17`) Gitleaks (9s), Python Birim Testleri (8s), SonarQube Cloud Quality Gate (31s) ve Trivy Konteyner/Bağımlılık Taraması (43s) olmak üzere 4 aşamanın tamamı `PASS` (1m 40s) ile tamamlandı.
+- **Karşılaşılan Hatalar ve Çözümleri:**
+  - `#13`: Taban `debian 13.7` imajındaki OS paketi açığı `apt-get update && apt-get upgrade -y` ile kapatıldı.
+  - `#14–#16`: Taban imajdaki `setuptools/_vendor` içinde gömülü eski `jaraco.context 5.3.0` (`CVE-2026-23949`) ve `wheel 0.45.1` (`CVE-2026-24049`) paketleri, çalışma zamanında gerekmeyen bu araçların `pip uninstall -y setuptools wheel` ile imajdan kaldırılmasıyla çözüldü ve SonarQube `pip install` hash kuralı korundu.
+- **Güvenlik Kararları ve Gerekçeleri:** Konteyner kaçışı riskine karşı non-root (`appuser`) kullanıcısı zorunlu kılındı; saldırı yüzeyini küçültmek için çalışma zamanında gerekmeyen derleme/paketleme araçları imajdan temizlendi.
+- **Açık Kalan İşler ve Sonraki Faz:** Faz 6 kapsamında tüm güvenlik araçlarının çıktılarını (Gitleaks, SonarQube, Trivy SARIF/JSON raporları) GitHub Security sekmesine/artifact'larına merkezi olarak aktarma, mimari dokümantasyon ve bitirme sunumu hazırlığı.
