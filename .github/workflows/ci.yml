@@ -40,8 +40,8 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Bağımlılıkları yükle
-        run: "pip install --only-binary :all: -r requirements.txt"
+      - name: Bağımlılıkları hash doğrulaması ile yükle
+        run: "pip install --only-binary=:all: --require-hashes -r requirements.txt"
 
       - name: Birim testlerini ve kapsama analizini çalıştır
         env:
