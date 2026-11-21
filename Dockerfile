@@ -7,6 +7,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Güvenlik: Taban işletim sistemi paketlerini en güncel güvenlik yamalarıyla güncelle
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
+
 # Bağımlılıkları hash doğrulaması ile kur
 COPY requirements.txt .
 RUN pip install --no-cache-dir --only-binary=:all: --require-hashes -r requirements.txt
