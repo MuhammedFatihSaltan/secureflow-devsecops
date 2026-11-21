@@ -45,7 +45,34 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Birim testlerini çalıştır (pytest)
+      - name: Birim testlerini ve kapsama analizini çalıştır
         env:
           PYTHONPATH: src
-        run: pytest -v
+        run: pytest -v --cov=secureflow --cov-report=xml
+
+      - name: Kapsama raporunu sonraki adıma aktar
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  sonarqube-scan:
+    name: SonarQube Cloud SAST ve Quality Gate
+    runs-on: ubuntu-latest
+    needs: python-tests
+
+    steps:
+      - name: Depo kodunu indir
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Kapsama raporunu indir
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+
+      - name: SonarQube Cloud Analizi ve Quality Gate Kontrolü
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
