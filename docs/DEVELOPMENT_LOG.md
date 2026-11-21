@@ -77,3 +77,29 @@ Bu dosya proje süresince alınan teknik kararları, yapılan işlemleri, test s
 - **Manuel Web Arayüzü Ayarları:** GitHub deposu üzerinde Actions sekmesinden iş akışı yürütmesi doğrulandı.
 - **Güvenlik Kararları ve Gerekçeleri:** GitHub Actions iş akışına yalnızca okuma yetkisi (`contents: read`) verildi; bağımlılıklar kesin sürüm numaralarıyla sabitlendi.
 - **Açık Kalan İşler ve Sonraki Faz:** Faz 3 kapsamında Gitleaks aracının CI iş akışına entegre edilmesi, temiz kod ve sahte secret senaryolarının test edilmesi.
+
+
+---
+
+## Kayıt 4 — Faz 3: Gitleaks Secret Taraması ve Güvenlik Kapısı Doğrulaması
+- **Tarih:** 21.11.2026
+- **Faz ve Amaç:** Faz 3 — CI/CD boru hattına Gitleaks entegrasyonu, temiz kod (negatif) ve sahte gizli anahtar (pozitif) senaryolarının test edilerek güvenlik kapısı davranışının doğrulanması.
+- **Yapılan İşlemler:**
+  - `.github/workflows/ci.yml` dosyasına `gitleaks/gitleaks-action@v2` adımı `fetch-depth: 0` parametresiyle eklendi ve `python-tests` işi `needs: secret-scan` bağımlılığıyla bu güvenlik kapısına bağlandı.
+  - Temiz kod üzerinde ilk doğrulama (`PASS`) yapıldı.
+  - Ana dalı (`main`) kirletmemek için `test/gitleaks-secret-check` dalı oluşturularak Pull Request üzerinden kontrollü sahte secret testleri gerçekleştirildi.
+  - Test tamamlandıktan sonra PR birleştirilmeden kapatıldı ve geçici test dalı silindi.
+- **Kurulan Paketler ve Araç Sürümleri:** `gitleaks/gitleaks-action@v2` (GitHub Actions runner üzerinde).
+- **Çalıştırılan Komutlar:**
+  - `git add . && git commit -m "feat: ci iş akışına gitleaks secret taraması eklendi" && git push`
+  - `git checkout -b test/gitleaks-secret-check`
+  - `git add tests/fixtures/sample_leaked_secret.py && git commit -m "test: gitleaks allowlist dışı sahte token örneği güncellendi" && git push -u origin test/gitleaks-secret-check`
+  - `git checkout main && git branch -D test/gitleaks-secret-check`
+- **Testler ve Gerçek Sonuçlar:**
+  - **Negatif Senaryo (Temiz Kod):** `SecureFlow CI #3` (commit `85041a5`) 24 saniyede `PASS` verdi.
+  - **Pozitif Senaryo 1 (AWS Dokümantasyon Örneği):** `AKIAIOSFODNN7EXAMPLE` değeri Gitleaks'in yerleşik yanlış pozitif istisna listesinde (allowlist) yer aldığı için `PASS` verdi (önemli teknik bulgu olarak kaydedildi).
+  - **Pozitif Senaryo 2 (Allowlist Dışı Sahte Token):** Sahte `ghp_...` formatlı token eklendiğinde `Gitleaks Secret Taraması` 8 saniyede `FAIL` verdi ve `Python Ortamı ve Birim Testleri` adımı otomatik olarak atlandı (`Skipped`).
+- **Karşılaşılan Hatalar ve Çözümleri:** İlk testte kullanılan AWS resmi örnek anahtarı Gitleaks allowlist'ine takıldığı için desen uyumlu farklı bir sahte token ile test güncellenerek beklendiği gibi `FAIL` davranışı doğrulandı.
+- **Manuel Web Arayüzü Ayarları:** GitHub üzerinde test PR'ı açıldı, CI başarısızlığı doğrulandı ve PR merge edilmeden kapatılıp uzak test dalı silindi.
+- **Güvenlik Kararları ve Gerekçeleri:** Test verilerinin ana dal geçmişinde kalmaması için izole dal + PR stratejisi uygulandı; gerçek API anahtarı yerine sahte test verisi kullanıldı.
+- **Açık Kalan İşler ve Sonraki Faz:** Faz 4 kapsamında SonarQube Cloud statik kod analizi (SAST) ve Quality Gate entegrasyonunun yapılması.
