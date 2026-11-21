@@ -1,0 +1,35 @@
+# Sanal ortam ve Python derleme dosyaları
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ortam değişkenleri ve gizli anahtarlar
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Güvenlik tarama çıktıları ve hassas ham raporlar
+reports/
+*.sarif
+trivy-results.json
+gitleaks-report.json
+zap-report.*
+
+# SQLite veritabanı dosyaları
+*.db
+*.sqlite
+*.sqlite3
+
+# İşletim sistemi ve IDE dosyaları
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
