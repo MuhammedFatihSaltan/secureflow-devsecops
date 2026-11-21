@@ -25,6 +25,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Gitleaks SARIF raporunu arşivle
+        if: always() && hashFiles('results.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-sarif-report
+          path: results.sarif
+
   python-tests:
     name: Python Ortamı ve Birim Testleri
     runs-on: ubuntu-latest
@@ -84,7 +91,18 @@ jobs:
       - name: Depo kodunu indir
         uses: actions/checkout@v4
 
-      - name: Dosya sistemi ve Dockerfile yapılandırma taraması
+      - name: Dosya sistemi ve Dockerfile SARIF raporu oluştur
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          scanners: "vuln,misconfig"
+          severity: "CRITICAL,HIGH"
+          format: "sarif"
+          output: "trivy-fs-report.sarif"
+          ignore-unfixed: true
+
+      - name: Dosya sistemi ve Dockerfile güvenlik kapısı kontrolü
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: "fs"
@@ -97,7 +115,17 @@ jobs:
       - name: Docker imajını derle
         run: docker build -t secureflow:ci .
 
-      - name: Docker imajı zafiyet taraması
+      - name: Docker imajı SARIF raporu oluştur
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: "secureflow:ci"
+          scanners: "vuln"
+          severity: "CRITICAL,HIGH"
+          format: "sarif"
+          output: "trivy-image-report.sarif"
+          ignore-unfixed: true
+
+      - name: Docker imajı zafiyet güvenlik kapısı kontrolü
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: "secureflow:ci"
@@ -105,3 +133,12 @@ jobs:
           severity: "CRITICAL,HIGH"
           exit-code: "1"
           ignore-unfixed: true
+
+      - name: Trivy SARIF güvenlik raporlarını arşivle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-sarif-reports
+          path: |
+            trivy-fs-report.sarif
+            trivy-image-report.sarif

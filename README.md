@@ -1,17 +1,38 @@
-# SecureFlow — CI/CD Süreçlerinde Otomatik Zafiyet Araması ve DevSecOps Boru Hattı
+# SecureFlow — CI/CD Boru Hatlarında Otomatik Güvenlik Açığı Taraması (DevSecOps)
 
-SecureFlow, yazılım geliştirme yaşam döngüsüne (SDLC) entegre edilen; gizli bilgi (secret) sızıntılarını, statik kod zafiyetlerini, bağımlılık ve konteyner imajı açıklarını otomatik olarak tarayan ve belirlenen güvenlik politikalarına göre CI/CD akışını yöneten bir DevSecOps platformudur.
+**SecureFlow**, yazılım geliştirme yaşam döngüsünün (SDLC) en erken aşamalarında güvenlik kontrollerini otomatize eden (**Shift-Left Security**), çok katmanlı ve sıfır-güven (**Zero-Trust**) prensiplerine dayalı bir **DevSecOps CI/CD** mimarisidir.
 
-## Proje Amacı
-- **Shift-Left Security:** Güvenlik kontrollerini üretim aşamasına gelmeden geliştirme ve entegrasyon adımlarına taşımak.
-- **Merkezi Karar Mekanizması:** Farklı güvenlik araçlarından (Gitleaks, SonarQube Cloud, Trivy, OWASP ZAP) elde edilen bulguları Python tabanlı karar motoru ile ortak bir veri modelinde normalize etmek ve `PASS`, `WARNING` veya `FAIL` kararı üretmek.
-- **Ölçülebilir Raporlama:** Tarama sonuçlarını politika kurallarıyla birlikte JSON, HTML ve PDF formatlarında raporlamak.
+---
 
-## Planlanan Teknoloji Yığını
-- **Sürüm Kontrol & CI/CD:** Git, GitHub, GitHub Actions
-- **Karar Motoru & Test:** Python 3.11, pytest, ReportLab
-- **Güvenlik Araçları:** Gitleaks, SonarQube Cloud, Trivy, OWASP ZAP
-- **Konteynerizasyon:** Docker
+## 1. Mimari Akış ve Güvenlik Kapıları (Security Gates)
 
-## Geliştirme Durumu
-Proje faz bazlı olarak geliştirilmektedir. Teknik kararlar ve ilerleme kayıtları `docs/DEVELOPMENT_LOG.md` dosyasında tutulmaktadır.
+Her `push` ve `pull_request` olayında GitHub Actions üzerinde 4 aşamalı güvenlik kapısı sırasıyla tetiklenir. Herhangi bir aşamada kritik bulgu tespit edildiğinde boru hattı otomatik olarak durdurulur (**Fail-Fast**):
+
+```text
+[Git Push / PR]
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Secret Detection (Gitleaks v2.3.9 - Commit SHA Pinned)   │
+│    • Tüm Git geçmişinde API anahtarı, token ve parola tarama│
+│    • Çıktı: gitleaks-sarif-report (SARIF)                   │
+└──────────────────────────────┬──────────────────────────────┘
+                               ▼ (PASS)
+┌─────────────────────────────────────────────────────────────┐
+│ 2. Supply Chain & Unit Testing (Python 3.11 + Pytest)       │
+│    • SHA-256 hash doğrulamalı kurulum (--require-hashes)    │
+│    • Birim testleri ve XML kod kapsama analizi (coverage)   │
+└──────────────────────────────┬──────────────────────────────┘
+                               ▼ (PASS)
+┌─────────────────────────────────────────────────────────────┐
+│ 3. SAST & Quality Gate (SonarQube Cloud)                    │
+│    • Statik kod analizi, güvenlik açıkları ve kod kalitesi  │
+│    • sonar.qualitygate.wait=true ile zorunlu kalite kapısı  │
+└──────────────────────────────┬──────────────────────────────┘
+                               ▼ (PASS)
+┌─────────────────────────────────────────────────────────────┐
+│ 4. IaC, Dependency & Container Scan (Trivy v0.36.0)         │
+│    • Dosya sistemi ve Dockerfile misconfiguration taraması  │
+│    • Hardened Docker imajı (non-root appuser) CVE taraması  │
+│    • Çıktı: trivy-sarif-reports (SARIF)                     │
+└─────────────────────────────────────────────────────────────┘
