@@ -2,5 +2,5 @@
 İçerisindeki anahtar tamamen SAHTEDİR (dummy/mock) ve hiçbir gerçek servise ait değildir.
 """
 
-# Gitleaks AWS Access Key ID kuralını tetiklemek için kullanılan sahte test değeri
-MOCK_AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
+# Gitleaks allowlist dışında kalan, format uyumlu sahte test anahtarı
+MOCK_GITHUB_TOKEN = "ghp_9xK2mP7vL4qR8wN1zT5yB3cJ6hF0dG4sA2eW"
