@@ -48,3 +48,32 @@ Bu dosya proje süresince alınan teknik kararları, yapılan işlemleri, test s
 - **Manuel Web Arayüzü Ayarları:** GitHub üzerinde `MuhammedFatihSaltan/secureflow-devsecops` deposu doğrulandı.
 - **Güvenlik Kararları ve Gerekçeleri:** `.venv/`, `.env`, `reports/`, `*.sarif` ve veritabanı dosyaları `.gitignore` içerisine eklenerek hassas verilerin ve geçici çıktıların sürüm kontrolüne girmesi engellendi.
 - **Açık Kalan İşler ve Sonraki Faz:** Faz 2 kapsamında Python paket yapısının (`src/secureflow`), sanal ortamın, `pytest` altyapısının ve ilk GitHub Actions iş akışının oluşturulması.
+
+
+---
+
+## Kayıt 3 — Faz 2: Python İskeleti, Test Altyapısı ve İlk CI İş Akışı
+- **Tarih:** 21.11.2026
+- **Faz ve Amaç:** Faz 2 — Python çekirdek paket yapısının oluşturulması, izole sanal ortam kurulumu, `pytest` birim test altyapısının kurulması ve GitHub Actions üzerinde ilk otomatik test iş akışının doğrulanması.
+- **Yapılan İşlemler:**
+  - `src/secureflow`, `tests` ve `.github/workflows` dizinleri oluşturuldu.
+  - Sürüm sabitleme (`pytest==8.3.3`) stratejisiyle `requirements.txt` dosyası hazırlandı.
+  - Temel sistem durum kontrolü modülü (`src/secureflow/core.py`) ve birim testi (`tests/test_core.py`) yazıldı.
+  - En az yetki prensibi (`permissions: contents: read`) gözetilerek `.github/workflows/ci.yml` iş akışı yapılandırıldı.
+  - `PROMPT.md` ana talimat belgesi tam metin olarak depoya eklendi.
+- **Kurulan Paketler ve Araç Sürümleri:**
+  - `pytest==8.3.3` (Python `3.11.9` sanal ortamı `.venv` içinde)
+- **Çalıştırılan Komutlar:**
+  - `mkdir src\secureflow && mkdir tests && mkdir .github\workflows`
+  - `py -m venv .venv && .venv\Scripts\activate`
+  - `python -m pip install --upgrade pip && pip install pytest==8.3.3`
+  - `set PYTHONPATH=src && pytest -v`
+  - `git add . && git commit -m "feat: python paket iskeleti, pytest altyapısı ve ilk ci iş akışı eklendi" && git push`
+  - `git add PROMPT.md && git commit -m "docs: ana geliştirme talimat belgesi (PROMPT.md) eklendi" && git push`
+- **Testler ve Gerçek Sonuçlar:**
+  - Yerel birim test sonucu: `1 passed in 0.02s`.
+  - GitHub Actions `SecureFlow CI` iş akışı başarıyla tamamlandı.
+- **Karşılaşılan Hatalar ve Çözümleri:** Hata ile karşılaşılmadı.
+- **Manuel Web Arayüzü Ayarları:** GitHub deposu üzerinde Actions sekmesinden iş akışı yürütmesi doğrulandı.
+- **Güvenlik Kararları ve Gerekçeleri:** GitHub Actions iş akışına yalnızca okuma yetkisi (`contents: read`) verildi; bağımlılıklar kesin sürüm numaralarıyla sabitlendi.
+- **Açık Kalan İşler ve Sonraki Faz:** Faz 3 kapsamında Gitleaks aracının CI iş akışına entegre edilmesi, temiz kod ve sahte secret senaryolarının test edilmesi.
