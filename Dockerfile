@@ -7,11 +7,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Güvenlik: Taban işletim sistemi paketlerini ve gömülü Python paketleme araçlarını (setuptools, wheel) güncelle
+# Güvenlik: Taban işletim sistemi paketlerini en güncel güvenlik yamalarıyla güncelle
 RUN apt-get update && \
     apt-get upgrade -y && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip install --no-cache-dir --upgrade pip setuptools>=78.1.1 wheel>=0.46.2
+    rm -rf /var/lib/apt/lists/*
+
+# Bağımlılıkları (güncel setuptools ve wheel dahil) SHA-256 hash doğrulaması ile kur
+COPY requirements.txt .
+RUN pip install --no-cache-dir --only-binary=:all: --require-hashes -r requirements.txt
 
 # Uygulama kaynak kodunu kopyala
 COPY src/ ./src/
