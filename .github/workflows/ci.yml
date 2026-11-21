@@ -71,6 +71,6 @@ jobs:
           name: coverage-report
 
       - name: SonarQube Cloud Analizi ve Quality Gate Kontrolü
-        uses: SonarSource/sonarqube-scan-action@221b54ef095b12679e83892978d4bf7a801e2063 # v5.0.0
+        uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703 # v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
