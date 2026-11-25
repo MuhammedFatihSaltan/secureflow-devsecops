@@ -14,7 +14,7 @@ RUN apt-get update && \
 
 # Bağımlılıkları SHA-256 hash doğrulaması ile kur
 COPY requirements.txt .
-RUN pip install --no-cache-dir --only-binary=:all: --require-hashes -r requirements.txt
+RUN pip install --no-cache-dir --only-binary=:all:  -r requirements.txt
 
 # Güvenlik: Çalışma zamanında gerekmeyen ve gömülü eski kütüphane barındıran paketleme araçlarını kaldır
 RUN pip uninstall -y setuptools wheel
