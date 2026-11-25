@@ -12,4 +12,4 @@ def get_system_status() -> Dict[str, str]:
     }
 
 
-    AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    AWS_ACCESS_KEY_ID = "AKIAQ3EGRKT5ZLM7XW2P"
