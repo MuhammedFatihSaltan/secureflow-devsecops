@@ -10,3 +10,5 @@ def get_system_status() -> Dict[str, str]:
         "status": "ready",
         "policy_mode": "strict",
     }
+
+    AWS_ACCESS_KEY_ID = "AKIAQ3EGRKT5ZLM7XW2P"
